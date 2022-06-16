@@ -1,0 +1,14 @@
+.green-color {
+  color: #37b599;
+  font-weight: 600;
+  text-align: center;
+}
+.align-center {
+  text-align: center;
+}
+th {
+  padding: 20px 0 !important;
+}
+td {
+  padding: 10px 0 !important;
+}
