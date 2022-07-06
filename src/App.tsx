@@ -27,6 +27,7 @@ import { BUSD, mainnetContract } from "./global/constants";
 const App = () => {
   const [wallet, setWallet] = useState(false);
   const { account } = useEthers();
+  const [balance, setBalance] = useState(0);
   // const BUSDtoken = useToken(BUSD);
   const token = useToken(mainnetContract);
   const BUSDtokenBalance = useTokenBalance(BUSD, account);
@@ -72,6 +73,15 @@ const App = () => {
       });
   };
 
+  useEffect(() => {
+    fetch(`/balance`, {
+      headers: {
+        accepts: "application/json",
+      },
+    })
+      .then((e) => e.json())
+      .then(console.log);
+  }, []);
   useEffect(() => {
     toastMsg(mintState);
   }, [mintState]);
@@ -120,6 +130,16 @@ const App = () => {
           {account ? account : "Connect Wallet"}
         </p>
       </div>
+      <p>
+        Price: {liquidity / Number(token?.totalSupply) || 0}BUSD ( + 0.025 %
+        fee)
+      </p>
+      <p>Circulating Supply: {liquidity && formatEther(liquidity)}</p>
+      <p>Future Balance: {balance}</p>
+      <p>
+        Contract Balance:{" "}
+        {liquidity && Number(formatEther(liquidity)) - balance}
+      </p>
       <div
         style={{
           marginBottom: "30px",

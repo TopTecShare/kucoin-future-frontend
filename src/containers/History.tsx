@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios, { AxiosResponse } from "axios";
-df
 type History = {
   id: number;
   contracts: string;
@@ -28,7 +27,7 @@ const Histories = () => {
         <td>{history.contracts}</td>
         <td>{history.type}</td>
         <td className="green-color">{history.PNL}</td>
-        <td>{history.position}</td>
+        <td>{String(new Date(history.position))}</td>
       </tr>
     );
   });
