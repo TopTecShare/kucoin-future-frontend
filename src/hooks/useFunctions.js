@@ -61,12 +61,13 @@ export function useLiquidity() {
 }
 
 export function useRefer(address) {
-  if (!address) return undefined;
   const { value } =
-    useCall({
-      contract: contract,
-      method: "refered",
-      args: [address],
-    }) ?? {};
+    useCall(
+      address && {
+        contract: contract,
+        method: "refered",
+        args: [address],
+      }
+    ) ?? {};
   return value?.[0];
 }
