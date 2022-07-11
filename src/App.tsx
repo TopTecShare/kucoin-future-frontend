@@ -13,8 +13,11 @@ import {
 import {
   useMint,
   useRedeem,
+  useClaim,
   useApprove,
+  useContractBalance,
   useLiquidity,
+  useRefer,
 } from "./hooks/useFunctions";
 
 import useEstimateGas from "./hooks/useEstimateGas";
@@ -34,17 +37,23 @@ const App = () => {
   const tokenBalance = useTokenBalance(mainnetContract, account);
   const tokenAllowance = useTokenAllowance(BUSD, account, mainnetContract);
   const [redeemAmount, setRedeem] = useState("");
+  const [claimAmount, setClaim] = useState("");
   const [mintAmount, setMint] = useState("");
+  const contractBalance = useContractBalance();
+  const referalBalance = useRefer(account);
   const liquidity = useLiquidity();
-  const { mintGas, redeemGas, approveGas } = useEstimateGas();
+  const { mintGas, redeemGas, claimGas, approveGas } = useEstimateGas();
   const { mint, mintState } = useMint();
   const { redeem, redeemState } = useRedeem();
+  const { claim, claimState } = useClaim();
   const { approve, approveState } = useApprove();
   const [check, setCheck] = useState(false);
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(urlSearchParams.entries());
   const referer = useMemo(() => {
     return account
-      ? window.location.href + "?ref=" + account
-      : window.location.href;
+      ? window.location.origin + "?ref=" + account
+      : window.location.origin;
   }, [account]);
 
   const toastMsg = (state: any) => {
@@ -80,7 +89,7 @@ const App = () => {
       },
     })
       .then((e) => e.json())
-      .then(console.log);
+      .then(setBalance);
   }, []);
   useEffect(() => {
     toastMsg(mintState);
@@ -89,6 +98,10 @@ const App = () => {
   useEffect(() => {
     toastMsg(redeemState);
   }, [redeemState]);
+
+  useEffect(() => {
+    toastMsg(claimState);
+  }, [claimState]);
 
   useEffect(() => {
     toastMsg(approveState);
@@ -106,7 +119,13 @@ const App = () => {
         }}
       >
         <div>
-          Referer: <input readOnly value={referer} onChange={() => {}} />
+          Referer:{" "}
+          <input
+            readOnly
+            value={referer}
+            onChange={() => {}}
+            style={{ width: `${referer.length}ch` }}
+          />
           <button
             style={{
               width: "30px",
@@ -131,14 +150,22 @@ const App = () => {
         </p>
       </div>
       <p>
-        Price: {liquidity / Number(token?.totalSupply) || 0}BUSD ( + 0.025 %
-        fee)
+        Price: {liquidity / Number(token?.totalSupply) || 0}
+        BUSD ( + 0.025 % fee)
       </p>
       <p>Circulating Supply: {liquidity && formatEther(liquidity)}</p>
       <p>Future Balance: {balance}</p>
       <p>
         Contract Balance:{" "}
-        {liquidity && Number(formatEther(liquidity)) - balance}
+        {contractBalance && Number(formatEther(contractBalance))}
+      </p>
+      <p>token Balance: {tokenBalance && Number(formatEther(tokenBalance))}</p>
+      <p>
+        BUSD Balance:{" "}
+        {BUSDtokenBalance && Number(formatEther(BUSDtokenBalance))}
+      </p>
+      <p>
+        Referal Balance: {referalBalance && Number(formatEther(referalBalance))}
       </p>
       <div
         style={{
@@ -165,6 +192,7 @@ const App = () => {
           <span
             style={{ cursor: "pointer", textDecoration: "underline" }}
             onClick={() => {
+              const ratio = params.ref ? 1.03 : 1.025;
               BUSDtokenBalance &&
                 token?.totalSupply &&
                 liquidity &&
@@ -174,7 +202,7 @@ const App = () => {
                       BUSDtokenBalance.mul(liquidity).div(token?.totalSupply)
                     ) /
                       10 ** 18 /
-                      1.025
+                      ratio
                   )
                 );
             }}
@@ -191,8 +219,14 @@ const App = () => {
               }}
               onClick={async () => {
                 try {
-                  const estimatedGas = await mintGas(parseEther(mintAmount));
-                  mint(parseEther(mintAmount), {
+                  console.log(window.location.pathname);
+
+                  const address = params.ref ? params.ref : mainnetContract;
+                  const estimatedGas = await mintGas(
+                    parseEther(mintAmount),
+                    address
+                  );
+                  mint(parseEther(mintAmount), address, {
                     gasLimit: estimatedGas.mul(2),
                   });
                 } catch (error: any) {
@@ -222,11 +256,11 @@ const App = () => {
                 try {
                   const estimatedGas = await approveGas(
                     mainnetContract,
-                    parseEther("10000000000000000000000000")
+                    "115792089237316195423570985008687907853269984665640564039457584007913129639935"
                   );
                   approve(
                     mainnetContract,
-                    parseEther("10000000000000000000000000"),
+                    "115792089237316195423570985008687907853269984665640564039457584007913129639935",
                     {
                       gasLimit: estimatedGas.mul(2),
                     }
@@ -299,6 +333,51 @@ const App = () => {
             }}
           >
             Redeem
+          </button>
+        </div>
+        <div>
+          <input
+            value={claimAmount}
+            onChange={(e) => {
+              setClaim(e.target.value);
+            }}
+            inputMode="numeric"
+          />{" "}
+          {Number(claimAmount)} BUSD is claimed.{" "}
+          <span
+            style={{ cursor: "pointer", textDecoration: "underline" }}
+            onClick={() => {
+              referalBalance && setClaim(formatEther(referalBalance));
+            }}
+          >
+            Max
+          </span>{" "}
+          <button
+            style={{
+              cursor: "pointer",
+              border: "1px solid rgba(118, 118, 118, 0.3)",
+            }}
+            onClick={async () => {
+              try {
+                console.log(claimAmount);
+                const estimatedGas = await claimGas(parseEther(claimAmount));
+                claim(parseEther(claimAmount), {
+                  gasLimit: estimatedGas.mul(2),
+                });
+              } catch (error: any) {
+                toast.error(
+                  error.error
+                    ? error.error.message.split("execution reverted: ").join("")
+                    : error.split("execution reverted: ").join(""),
+                  {
+                    position: toast.POSITION.BOTTOM_RIGHT,
+                    hideProgressBar: true,
+                  }
+                );
+              }
+            }}
+          >
+            Claim
           </button>
         </div>
       </div>

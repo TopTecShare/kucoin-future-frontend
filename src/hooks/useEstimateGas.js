@@ -30,6 +30,17 @@ export default function useEstimateGas() {
     return estimatedGas;
   };
 
+  const claimGas = async (...args) => {
+    const contract = new Contract(
+      mainnetContract,
+      contractAbi,
+      library?.getSigner()
+    );
+    const estimatedGas = await contract.estimateGas.claim(...args);
+
+    return estimatedGas;
+  };
+
   const approveGas = async (...args) => {
     const contract = new Contract(BUSD, contractAbi, library?.getSigner());
     const estimatedGas = await contract.estimateGas.approve(...args);
@@ -37,5 +48,5 @@ export default function useEstimateGas() {
     return estimatedGas;
   };
 
-  return { mintGas, redeemGas, approveGas };
+  return { mintGas, redeemGas, approveGas, claimGas };
 }
