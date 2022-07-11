@@ -154,6 +154,9 @@ const App = () => {
         BUSD ( + 0.025 % fee)
       </p>
       <p>Circulating Supply: {liquidity && formatEther(liquidity)}</p>
+      <p>
+        Total Supply: {token?.totalSupply && formatEther(token?.totalSupply)}
+      </p>
       <p>Future Balance: {balance}</p>
       <p>
         Contract Balance:{" "}
