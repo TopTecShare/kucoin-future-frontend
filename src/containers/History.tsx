@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import axios, { AxiosResponse } from "axios";
+import { useState, useEffect } from "react";
 type History = {
   id: number;
   contracts: string;

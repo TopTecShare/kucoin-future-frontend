@@ -61,7 +61,7 @@ export function useLiquidity() {
 }
 
 export function useRefer(address) {
-  const { value, error } =
+  const { value } =
     useCall({
       contract: contract,
       method: "refered",
