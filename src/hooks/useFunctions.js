@@ -61,6 +61,7 @@ export function useLiquidity() {
 }
 
 export function useRefer(address) {
+  if (!address) return undefined;
   const { value } =
     useCall({
       contract: contract,
