@@ -17,6 +17,7 @@ const Histories = () => {
       },
     })
       .then((e) => e.json())
+      .then((e) => e.filter((el: any) => el.remain === 0))
       .then(setHistories);
   }, []);
 
